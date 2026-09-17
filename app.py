@@ -27,6 +27,11 @@ df = get_data_from_excel()
 #--------------------------------------------</STORE DATA FROM EXCEL IN TEMP MEMORY>---
 
 
+
+
+
+
+
 #-<MAINPAGE>------------------------------------------------------------------------
 
 oem_sales = int(df.loc[(df["Financial Customer Group"].isin(["OEM","UNI"])) &
@@ -37,7 +42,6 @@ afmkt_sales = int(df.loc[df["Financial Customer Group"].isin(["AFM"]), "Sales Va
 job_work = int(df.loc[df["Description"].isin(["Job Work - Service"]), "Sales Value"].sum())
 negative_sales = int(-df.loc[df["Sales Value"] < 0, "Sales Value"].sum())
 total_sales = oem_sales + afmkt_sales + job_work - negative_sales
-
 
 st.title(":bar_chart: Sales Dashboard.")
 st.subheader(f"Total Sales: ₹ {total_sales:,}/-")
@@ -54,8 +58,147 @@ with col3:
 with col4:
     st.markdown(f"Sales Return: <span style='color:red'>₹{negative_sales:,}/-</span>", unsafe_allow_html=True)
 
-
 st.markdown("---")
+
+
+
+
+
+#-<Common df for GRAPH ONE, TWO, THREE>-------------------------------------------------------------------
+
+products = ["Radiator","Oil Cooler","Evaporator_Serpentine","Evaporator_TAF","Evaporator_PAF"]
+df_sel_1 = df[df["Product Type Description"].isin(products)]
+df_sel_1.rename(columns={"QTY": "Quantity"}, inplace=True)
+#df_sel_1["Invoice Date"] = pd.to_datetime(df_sel_1["Invoice Date"])
+df_sel_1["Updated Product Type"] = df_sel_1["Product Type Description"].replace({
+    "Evaporator_Serpentine": "Evaporator",
+    "Evaporator_TAF": "Evaporator",
+    "Evaporator_PAF": "Evaporator"
+    })
+
+#------------------------------------------------------------</ Common df for GRAPH ONE, TWO, THREE>-------
+
+
+
+
+
+
+
+
+
+#-<GRAPH ONE>-----------------------------------------------------------------------
+
+st.markdown("**1. Product-wise Sales**")
+sel_unit_1 = st.radio("Select Unit: ", 
+                      options=["Quantity","Sales Value"], 
+                      horizontal=True, 
+                      key="sel_unit_1")
+
+
+graph_table_1 = df_sel_1.groupby("Product Type Description")[sel_unit_1].sum().sort_index(ascending=False)
+graph_1 = px.bar(
+    graph_table_1,
+    x= graph_table_1.index,
+    y= sel_unit_1,
+    labels={
+        "x": "Product",
+        "y": sel_unit_1
+    }
+)
+st.plotly_chart(graph_1, width="stretch")
+st.markdown("---")
+
+#-------------------------------------------------------------------</GRAPH ONE>----
+
+
+
+
+
+
+
+
+
+#-<GRAPH TWO>-----------------------------------------------------------------------
+
+st.markdown("**2. Segment-wise Sales**")
+sel_unit_2 = st.radio("Select Unit: ", 
+                      options=["Quantity","Sales Value"], 
+                      horizontal=True, 
+                      key="sel_unit_2")
+
+graph_table_2 = df_sel_1.groupby("Financial Customer Group")[sel_unit_2].sum().sort_index(ascending=False)
+graph_2 = px.bar(
+    graph_table_2,
+    x= graph_table_2.index,
+    y= sel_unit_2,
+    labels={
+        "x": "Segment",
+        "y": sel_unit_2
+    }
+)
+st.plotly_chart(graph_2, width="stretch")
+st.markdown("---")
+
+#-------------------------------------------------------------------</GRAPH TWO>----
+
+
+
+
+
+
+
+#-<GRAPH THREE>----------------------------------------------------------------------
+
+st.markdown("**3. Daily Sales**")
+sel_unit_3 = st.radio("Select Unit: ", 
+                      options=["Quantity","Sales Value"], 
+                      horizontal=True, 
+                      key="sel_unit_3")
+
+graph_table_3 = df_sel_1.groupby(["Invoice Date","Updated Product Type"])[sel_unit_3].sum().reset_index().sort_values("Invoice Date")
+graph_3 = px.line(
+    graph_table_3,
+    x="Invoice Date",
+    y=sel_unit_3,
+    color="Updated Product Type",
+    markers=True
+)
+
+graph_3.update_traces(
+    line=dict(color="green"),
+    selector=dict(name="Oil Cooler")
+)
+
+graph_3.update_xaxes(
+    dtick="D1",
+    tickformat="%d-%b",
+    # tickangle=0
+)
+
+graph_3.update_layout(
+    xaxis_title="Date",
+    yaxis_title=sel_unit_3,
+    legend_title="Product Type",
+    hovermode="x unified"
+)
+
+st.plotly_chart(graph_3, width="stretch")
+st.markdown("---")
+
+#-----------------------------------------------------------------</GRAPH THREE>----
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -63,6 +206,18 @@ st.markdown("---")
 
 
 #-EVERYTHING TO BE UPDATED BELOW (DUMMY CODE)------------------------------------------------
+
+
+
+# product_1 = ["Radiator","Oil Cooler","Evaporator"]
+# sel_product = st.pills(
+#     "Select the Product/s: ",
+#     options= product_1,
+#     default= product_1,
+#     selection_mode="multi"
+# )
+
+
 
 # #-<GRAPH ONE>----------------------------------------------------------------------
 # st.write("**1. Plant-wise WIP**")
