@@ -11,7 +11,9 @@ st.set_page_config(page_title="Dashboard-Dispatch",
 #-<STORE DATA FROM EXCEL IN TEMP MEMORY>------------------------------------------------
 @st.cache_data
 def get_data_from_excel():
-    df = pd.read_excel(io=r"C:\Users\AmitGupta\Desktop\Dispatch.xlsx", skiprows=2)
+    # df = pd.read_excel(io=r"C:\Users\AmitGupta\Desktop\Dispatch.xlsx", skiprows=2)
+    df = pd.read_excel(io=r"C:\Users\amit.gupta\OneDrive - Pranav Vikas India Pvt. Ltd\Desktop\Dispatch.xlsx", skiprows=2)
+    
     df.columns = df.columns.str.strip()
     df["Description"] = df["Description"].str.strip()
     df["BP Name"] = df["BP Name"].str.strip()
@@ -25,7 +27,8 @@ def get_data_from_excel():
     df = df[columns_to_keep]
 
     products = ["Radiator","Oil Cooler","Evaporator_Serpentine","Evaporator_TAF","Evaporator_PAF"]
-    df = df[df["Product Type Description"].isin(products)]
+    df = df[(df["Product Type Description"].isin(products)) &
+            (df["Sales Warehouse"]=="WHR100")]
 
     df["Product"] = df["Product Type Description"].replace({
         "Evaporator_Serpentine": "Evaporator",
@@ -121,7 +124,6 @@ with col2:
         }
     )
     st.plotly_chart(graph_2, width="stretch")
-    st.markdown("---")
 
 #-------------------------------------------------------------------</GRAPH TWO>----  
     
@@ -226,6 +228,7 @@ graph_4 = px.bar(
 )
 
 graph_4.update_xaxes(
+    dtick="D1",
     tickformat="%d-%b",
 )
 
